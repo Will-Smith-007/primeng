@@ -10,6 +10,7 @@ import {
     contentChildren,
     effect,
     forwardRef,
+    HostBinding,
     inject,
     input,
     InputSignal,
@@ -69,7 +70,8 @@ export interface StepPanelContentTemplateContext {
     changeDetection: ChangeDetectionStrategy.OnPush,
     encapsulation: ViewEncapsulation.None,
     host: {
-        '[class]': 'cx("root")'
+        '[class]': 'cx("root")',
+        '[attr.role]': '"tablist"'
     },
     providers: [StepListStyle]
 })
@@ -152,7 +154,7 @@ export class StepItem extends BaseComponent {
     imports: [CommonModule, StepperSeparator, SharedModule],
     template: `
         @if (!content && !_contentTemplate) {
-            <button [attr.id]="id()" [class]="cx('header')" [attr.role]="'tab'" [tabindex]="isStepDisabled() ? -1 : undefined" [attr.aria-controls]="ariaControls()" [disabled]="isStepDisabled()" (click)="onStepClick()" type="button">
+            <button [attr.id]="id()" [class]="cx('header')" [tabindex]="isStepDisabled() ? -1 : undefined" [attr.aria-controls]="ariaControls()" [disabled]="isStepDisabled()" (click)="onStepClick()" type="button">
                 <span [class]="cx('number')">{{ value() }}</span>
                 <span [class]="cx('title')">
                     <ng-content></ng-content>
@@ -173,7 +175,7 @@ export class StepItem extends BaseComponent {
     host: {
         '[class]': 'cx("root")',
         '[attr.aria-current]': 'active() ? "step" : undefined',
-        '[attr.role]': '"presentation"',
+        '[attr.role]': '"tab"',
         '[attr.data-p-active]': 'active()',
         '[attr.data-p-disabled]': 'isStepDisabled()',
         '[attr.data-pc-name]': '"step"'
@@ -383,11 +385,12 @@ export class StepPanels extends BaseComponent {
     providers: [StepperStyle],
     host: {
         '[class]': 'cx("root")',
-        '[attr.role]': '"tablist"',
         '[attr.id]': 'id()'
     }
 })
 export class Stepper extends BaseComponent {
+    stepItem = contentChild(StepItem);
+
     /**
      * A model that can hold a numeric value or be undefined.
      * @defaultValue undefined
@@ -428,6 +431,14 @@ export class Stepper extends BaseComponent {
 
     isStepActive(value: number) {
         return this.value() === value;
+    }
+
+    /**
+     * Only set the role attribute of stepper to "tablist" if the vertical layout is used to ensure accessibility.
+     */
+    @HostBinding('attr.role')
+    get role(): string | null {
+        return this.stepItem() !== undefined ? 'tablist' : null;
     }
 }
 
